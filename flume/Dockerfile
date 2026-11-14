@@ -19,4 +19,6 @@ COPY --from=hadoop /opt/hadoop /opt/hadoop
 
 RUN mkdir -p /opt/flume/conf /tmp/logs_accidents
 
+RUN sed -i 's|<AppenderRef ref="LogFile" />|<AppenderRef ref="Console" />|' /opt/flume/conf/log4j2.xml
+
 WORKDIR /opt/flume
