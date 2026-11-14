@@ -1,12 +1,13 @@
-version: "3"
-
 services:
 
   namenode:
     image: apache/hadoop:3
     hostname: namenode
     container_name: namenode
-    command: ["hdfs", "namenode"]
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        hdfs namenode -format -force -nonInteractive && hdfs namenode
     ports:
       - "9870:9870"
       - "8020:8020"
@@ -86,7 +87,7 @@ services:
     image: mysql:8.0
     container_name: mysql
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: accidents_db
@@ -122,32 +123,6 @@ services:
       - "10002:10002"
     depends_on:
       - hive-metastore
-    networks:
-      - bigdata
-
-  spark-master:
-    image: bitnami/spark:3.4
-    container_name: spark-master
-    hostname: spark-master
-    environment:
-      SPARK_MODE: master
-      SPARK_MASTER_HOST: spark-master
-    ports:
-      - "7077:7077"
-      - "8080:8080"
-    networks:
-      - bigdata
-
-  spark-worker:
-    image: bitnami/spark:3.4
-    container_name: spark-worker
-    environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-      SPARK_WORKER_MEMORY: 2G
-      SPARK_WORKER_CORES: 2
-    depends_on:
-      - spark-master
     networks:
       - bigdata
 
