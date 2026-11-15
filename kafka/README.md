@@ -102,18 +102,3 @@ Détails et pièges pour Hive : voir `HIVE.md`.
 | HDFS vidé après recréation du NameNode | Formatage automatique au démarrage | Rejouer le consumer : les messages sont toujours dans Kafka |
 | DataNode refusait de démarrer | Cluster ID différent après reformatage | Supprimer le volume du DataNode |
 | `403` au push | Compte non collaborateur | Accès ajouté par le propriétaire du dépôt |
-
-## Questions de soutenance
-- **Pourquoi Kafka, Sqoop et Flume ?** Trois modes d'ingestion : flux de messages, import batch depuis une base, collecte de logs.
-- **Kafka écrit-il dans HDFS ?** Non. Le consumer lit le topic et écrit dans HDFS.
-- **Topic, partition, offset ?** Topic = canal nommé ; partition = sous-journal ordonné qui permet le parallélisme ; offset = numéro d'un message dans sa partition.
-- **Comment Kafka choisit la partition ?** Hash de la clé (ici l'id).
-- **À quoi sert le consumer group ?** Partager les partitions entre consumers et mémoriser la progression (`hdfs-writer`).
-- **Qu'est-ce que le lag ?** Messages écrits dans Kafka mais pas encore consommés ; ici 0.
-- **Si le consumer plante ?** Il reprend au dernier offset validé ; au plus un lot en double.
-- **Comment prouver que rien n'est perdu ?** Offsets = 1 000 000, lignes HDFS = 1 000 000, lag = 0.
-- **Pourquoi Kafka plutôt qu'une file classique ?** Il conserve les messages après lecture : on peut rejouer (c'est ce qui a permis de reconstruire HDFS).
-- **Pourquoi ZooKeeper ?** Métadonnées du cluster Kafka (version 7.4.0) ; remplacé par KRaft dans les versions récentes.
-- **Quelle différence entre Kafka et Flume ?** Kafka conserve et redistribue les messages à plusieurs lecteurs ; Flume transporte des événements (surtout des logs) vers une destination via Source, Channel, Sink.
-- **Comment le rendre temps réel ?** Un vrai producteur en continu ; ici le délai entre messages simule le flux.
-- **Comment passer à l'échelle ?** Plus de partitions et de consumers, plusieurs brokers (réplication 3), plusieurs DataNodes.
