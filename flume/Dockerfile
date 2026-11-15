@@ -22,3 +22,5 @@ RUN mkdir -p /opt/flume/conf /tmp/logs_accidents
 RUN sed -i 's|<AppenderRef ref="LogFile" />|<AppenderRef ref="Console" />|' /opt/flume/conf/log4j2.xml
 
 WORKDIR /opt/flume
+
+RUN echo 'export JAVA_OPTS="-Xms256m -Xmx1g"' > /opt/flume/conf/flume-env.sh
