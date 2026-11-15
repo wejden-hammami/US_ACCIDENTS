@@ -172,6 +172,42 @@ services:
     networks:
       - bigdata
 
+  producer:
+    build: ./kafka
+    container_name: kafka-producer
+    command: ["python", "producer.py"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: us_accidents
+      CSV_PATH: /data/US_Accidents_March23.csv
+      LIMIT: "1000000"
+      DELAY: "0"
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      - kafka
+    networks:
+      - bigdata
+    profiles: ["kafka-app"]
+
+  consumer:
+    build: ./kafka
+    container_name: kafka-consumer
+    command: ["python", "consumer.py"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: us_accidents
+      WEBHDFS_URL: http://namenode:9870
+      HDFS_DIR: /data/us_accidents/raw/kafka
+      BATCH_SIZE: "50000"
+      IDLE_TIMEOUT: "60"
+    depends_on:
+      - kafka
+      - namenode
+      - datanode
+    networks:
+      - bigdata
+    profiles: ["kafka-app"]
 volumes:
   namenode_data:
   datanode_data:
