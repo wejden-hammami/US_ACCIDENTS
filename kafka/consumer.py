@@ -13,11 +13,28 @@ HDFS_DIR = os.getenv("HDFS_DIR", "/data/us_accidents/raw/kafka")
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50000"))
 IDLE_TIMEOUT = int(os.getenv("IDLE_TIMEOUT", "60"))
 
+# Ordre des colonnes dans les fichiers HDFS (identique pour tous : pas d'en-tete)
 COLUMNS = [
-    "ID", "Severity", "Start_Time", "End_Time", "Start_Lat", "Start_Lng",
-    "Street", "City", "State", "Weather_Condition", "Temperature(F)",
-    "Visibility(mi)", "Junction", "Traffic_Signal", "Sunrise_Sunset",
+    "id", "severity", "start_time", "end_time", "start_lat", "start_lng",
+    "street", "city", "state", "weather_condition", "temperature_f",
+    "visibility_mi", "junction", "traffic_signal", "sunrise_sunset",
 ]
+
+# Anciens noms (messages envoyes par la 1re version du producer) -> lecture compatible
+LEGACY = {
+    "id": "ID", "severity": "Severity", "start_time": "Start_Time",
+    "end_time": "End_Time", "start_lat": "Start_Lat", "start_lng": "Start_Lng",
+    "street": "Street", "city": "City", "state": "State",
+    "weather_condition": "Weather_Condition", "temperature_f": "Temperature(F)",
+    "visibility_mi": "Visibility(mi)", "junction": "Junction",
+    "traffic_signal": "Traffic_Signal", "sunrise_sunset": "Sunrise_Sunset",
+}
+
+
+def value_of(rec, name):
+    if name in rec:
+        return rec[name]
+    return rec.get(LEGACY[name])
 
 
 def main():
@@ -43,7 +60,11 @@ def main():
         buf = io.StringIO()
         writer = csv.writer(buf, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         for rec in batch:
-            writer.writerow(["" if rec[c] is None else rec[c] for c in COLUMNS])
+            row = []
+            for c in COLUMNS:
+                v = value_of(rec, c)
+                row.append("" if v is None else v)
+            writer.writerow(row)
         path = f"{HDFS_DIR}/part-{run_id}-{file_no:05d}.csv"
         hdfs.write(path, data=buf.getvalue(), encoding="utf-8", overwrite=False)
         consumer.commit(asynchronous=False)

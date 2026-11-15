@@ -10,13 +10,18 @@ CSV_PATH = os.getenv("CSV_PATH", "/data/US_Accidents_March23.csv")
 LIMIT = int(os.getenv("LIMIT", "1000000"))
 DELAY = float(os.getenv("DELAY", "0"))  # secondes entre 2 messages (0 = vitesse max)
 
-# 15 colonnes, noms originaux du CSV (avec parentheses)
-COLUMNS = [
-    "ID", "Severity", "Start_Time", "End_Time", "Start_Lat", "Start_Lng",
-    "Street", "City", "State", "Weather_Condition", "Temperature(F)",
-    "Visibility(mi)", "Junction", "Traffic_Signal", "Sunrise_Sunset",
+# (colonne du CSV, nom commun) - noms communs = ceux de la table MySQL de Sqoop, en minuscules
+FIELDS = [
+    ("ID", "id"), ("Severity", "severity"),
+    ("Start_Time", "start_time"), ("End_Time", "end_time"),
+    ("Start_Lat", "start_lat"), ("Start_Lng", "start_lng"),
+    ("Street", "street"), ("City", "city"), ("State", "state"),
+    ("Weather_Condition", "weather_condition"),
+    ("Temperature(F)", "temperature_f"), ("Visibility(mi)", "visibility_mi"),
+    ("Junction", "junction"), ("Traffic_Signal", "traffic_signal"),
+    ("Sunrise_Sunset", "sunrise_sunset"),
 ]
-BOOL_COLS = {"Junction", "Traffic_Signal"}   # True/False -> 1/0 (TINYINT comme MySQL)
+BOOL_COLS = {"Junction", "Traffic_Signal"}   # True/False -> 1/0 (comme MySQL et Sqoop)
 TIME_COLS = {"Start_Time", "End_Time"}       # on garde 'YYYY-MM-DD HH:MM:SS'
 
 
@@ -27,7 +32,7 @@ def clean(col, value):
     if col in BOOL_COLS:
         return 1 if value.lower() == "true" else 0
     if col in TIME_COLS:
-        return value[:19]                    # supprime les fractions de secondes
+        return value[:19]                    # supprime les fractions de seconde
     return value
 
 
@@ -52,11 +57,11 @@ def main():
         for row in reader:
             if sent >= LIMIT:
                 break
-            record = {c: clean(c, row.get(c)) for c in COLUMNS}
+            record = {name: clean(col, row.get(col)) for col, name in FIELDS}
             payload = json.dumps(record, ensure_ascii=False).encode("utf-8")
             while True:
                 try:
-                    producer.produce(TOPIC, key=record["ID"], value=payload,
+                    producer.produce(TOPIC, key=record["id"], value=payload,
                                      on_delivery=on_delivery)
                     break
                 except BufferError:          # file locale pleine : on laisse partir
