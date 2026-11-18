@@ -1,0 +1,4 @@
+source,lignes,ids_uniques
+sqoop,1000000,1000000
+kafka,1000000,1000000
+flume,1000000,1000000

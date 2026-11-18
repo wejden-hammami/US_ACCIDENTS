@@ -12,6 +12,8 @@ services:
       HADOOP_HOME: /opt/hadoop
       CORE-SITE.XML_fs.default.name: hdfs://namenode:8020
       CORE-SITE.XML_fs.defaultFS: hdfs://namenode:8020
+      CORE-SITE.XML_hadoop.proxyuser.hadoop.hosts: "*"
+      CORE-SITE.XML_hadoop.proxyuser.hadoop.groups: "*"
       HDFS-SITE.XML_dfs.namenode.rpc-address: namenode:8020
       HDFS-SITE.XML_dfs.replication: "1"
       HDFS-SITE.XML_dfs.namenode.name.dir: /tmp/hadoop-hadoop/dfs/name
@@ -105,7 +107,7 @@ services:
       MYSQL_DATABASE: accidents_db
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sqoop:/docker-entrypoint-initdb.d
+      - ./sqoop/create_table.sql:/docker-entrypoint-initdb.d/create_table.sql
     networks:
       - bigdata
 
@@ -135,8 +137,11 @@ services:
     environment:
       SERVICE_NAME: metastore
       DB_DRIVER: derby
+      HADOOP_USER_NAME: hadoop
     ports:
       - "9083:9083"
+    volumes:
+      - ./hive/conf/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
     depends_on:
       - namenode
     networks:
@@ -149,11 +154,35 @@ services:
     environment:
       SERVICE_NAME: hiveserver2
       IS_RESUME: "true"
+      SERVICE_OPTS: "-Dhive.metastore.uris=thrift://hive-metastore:9083"
+      HADOOP_USER_NAME: hadoop
     ports:
       - "10000:10000"
       - "10002:10002"
+    volumes:
+      - ./hive/conf/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hive:/opt/scripts:ro
+      - ./dashboard/data:/export
+      - ./hive/emptylib:/opt/tez/lib:ro
     depends_on:
       - hive-metastore
+      - namenode
+    restart: on-failure
+    networks:
+      - bigdata
+
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    ports:
+      - "8050:8050"
+    environment:
+      HIVE_HOST: hiveserver2
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: us_accidents
+      WEBHDFS_URL: http://namenode:9870
+    volumes:
+      - ./dashboard/data:/app/data:ro
     networks:
       - bigdata
 
@@ -163,6 +192,8 @@ services:
     volumes:
       - ./flume/flume.conf:/opt/flume/conf/flume.conf
       - ./flume/logs:/tmp/logs_accidents
+    environment:
+      HADOOP_USER_NAME: hadoop
     command: >
       flume-ng agent --conf /opt/flume/conf
       --conf-file /opt/flume/conf/flume.conf
@@ -216,3 +247,7 @@ volumes:
 networks:
   bigdata:
     driver: bridge
+    name: bigdata-net
+
+
+

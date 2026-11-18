@@ -13,6 +13,14 @@ cat > /opt/hadoop/etc/hadoop/core-site.xml << 'EOF'
     <name>fs.defaultFS</name>
     <value>hdfs://namenode:8020</value>
   </property>
+  <property>
+    <name>hadoop.proxyuser.hadoop.hosts</name>
+    <value>*</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.hadoop.groups</name>
+    <value>*</value>
+  </property>
 </configuration>
 EOF
 
@@ -43,5 +51,7 @@ EOF
 chown -R hadoop:hadoop /tmp/hadoop-hadoop
 chown -R hadoop:hadoop /opt/hadoop/etc/hadoop
 
-su -s /bin/bash hadoop -c "hdfs namenode -format -force -nonInteractive"
+if [ ! -f /tmp/hadoop-hadoop/dfs/name/current/VERSION ]; then
+  su -s /bin/bash hadoop -c "hdfs namenode -format -force -nonInteractive"
+fi
 exec su -s /bin/bash hadoop -c "hdfs namenode"

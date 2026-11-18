@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<configuration>
+  <!-- HDFS du cluster Docker -->
+  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>
+  <property><name>hive.metastore.warehouse.dir</name><value>/user/hive/warehouse</value></property>
+  <property><name>hive.exec.scratchdir</name><value>/tmp/hive</value></property>
+  <!-- les requetes tournent comme l'utilisateur du conteneur (HADOOP_USER_NAME=hadoop) -->
+  <property><name>hive.server2.enable.doAs</name><value>false</value></property>
+  <!-- MapReduce en mode local dans HiveServer2 : pas besoin de YARN pour Hive -->
+  <property><name>mapreduce.framework.name</name><value>local</value></property>
+  <property><name>hive.metastore.schema.verification</name><value>false</value></property>
+  <property><name>hive.fetch.task.conversion</name><value>more</value></property>
+  <property><name>hive.metastore.uris</name><value>thrift://hive-metastore:9083</value></property>
+  <property><name>hive.metastore.event.db.notification.api.auth</name><value>false</value></property>
+  <property><name>hive.metastore.execute.setugi</name><value>false</value></property>
+  <property><name>yarn.resourcemanager.hostname</name><value>resourcemanager</value></property>
+  <property><name>mapreduce.application.classpath</name><value>/opt/hadoop/share/hadoop/mapreduce/*:/opt/hadoop/share/hadoop/mapreduce/lib/*:/opt/hadoop/share/hadoop/common/*:/opt/hadoop/share/hadoop/common/lib/*:/opt/hadoop/share/hadoop/yarn/*:/opt/hadoop/share/hadoop/yarn/lib/*:/opt/hadoop/share/hadoop/hdfs/*:/opt/hadoop/share/hadoop/hdfs/lib/*</value></property>
+  <property><name>yarn.app.mapreduce.am.env</name><value>HADOOP_MAPRED_HOME=/opt/hadoop</value></property>
+  <property><name>mapreduce.map.env</name><value>HADOOP_MAPRED_HOME=/opt/hadoop</value></property>
+  <property><name>mapreduce.reduce.env</name><value>HADOOP_MAPRED_HOME=/opt/hadoop</value></property>
+</configuration>
+
+
+
+
+

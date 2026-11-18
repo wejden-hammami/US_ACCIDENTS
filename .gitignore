@@ -1,1 +1,4 @@
 data/
+
+dashboard/data/*.csv
+!dashboard/data/.gitkeep
